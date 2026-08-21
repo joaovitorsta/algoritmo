@@ -3,41 +3,44 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>O Enigma de Aethelgard</title>
+  <title>O Enigma de Aethelgard - RPG Edição Expandida</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg-dark: #080911;
+      --bg-dark: #05070c;
+      --card-bg: rgba(13, 18, 30, 0.75);
+      --border-glow: rgba(139, 92, 246, 0.25);
       --primary: #8b5cf6;
-      --primary-glow: rgba(139, 92, 246, 0.4);
+      --primary-hover: #a78bfa;
       --accent: #06b6d4;
-      --text: #f8fafc;
+      --gold: #f59e0b;
+      --danger: #ef4444;
+      --text-main: #f8fafc;
       --text-muted: #94a3b8;
-      --card-bg: rgba(15, 23, 42, 0.7);
     }
 
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+      user-select: none;
     }
 
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
       background-color: var(--bg-dark);
-      color: var(--text);
+      color: var(--text-main);
       min-height: 100vh;
       display: flex;
       justify-content: center;
       align-items: center;
       overflow: hidden;
-      position: relative;
+      perspective: 1000px;
     }
 
-    /* Fundo dinâmico com Canvas */
-    #canvas-bg {
+    #bg-canvas {
       position: absolute;
       top: 0;
       left: 0;
@@ -46,169 +49,371 @@
       z-index: 1;
     }
 
-    /* Container Principal Glassmorphic */
-    .container {
-      position: relative;
-      z-index: 2;
-      width: 90%;
-      max-width: 800px;
-      padding: 3.5rem 2.5rem;
-      background: var(--card-bg);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 24px;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 40px var(--primary-glow);
-      text-align: center;
-      transition: opacity 0.5s ease, transform 0.5s ease;
+    /* Barra Superior de Controles */
+    .top-bar {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 12px;
+      z-index: 10;
     }
 
-    .badge {
+    .ctrl-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      backdrop-filter: blur(8px);
+      transition: all 0.2s ease;
+    }
+
+    .ctrl-btn:hover {
+      background: rgba(139, 92, 246, 0.2);
+      color: var(--text-main);
+      border-color: var(--primary);
+    }
+
+    /* Interface Principal */
+    .game-card {
+      position: relative;
+      z-index: 2;
+      width: 92%;
+      max-width: 900px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-glow);
+      border-radius: 24px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.9), 0 0 50px rgba(139, 92, 246, 0.15);
+      padding: 3rem 2.5rem;
+      transition: transform 0.1s ease-out, opacity 0.4s ease;
+      transform-style: preserve-3d;
+    }
+
+    .screen {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .screen.active {
+      display: block;
+      opacity: 1;
+    }
+
+    /* --- TELA 1: CAPA --- */
+    .cover-content {
+      text-align: center;
+    }
+
+    .badge-tag {
       display: inline-block;
-      padding: 6px 16px;
-      background: rgba(139, 92, 246, 0.15);
-      border: 1px solid rgba(139, 92, 246, 0.3);
+      padding: 6px 18px;
+      background: linear-gradient(90deg, rgba(139,92,246,0.2), rgba(6,182,212,0.2));
+      border: 1px solid rgba(139, 92, 246, 0.4);
       border-radius: 50px;
-      font-size: 0.8rem;
-      letter-spacing: 2px;
+      font-size: 0.75rem;
+      letter-spacing: 3px;
       text-transform: uppercase;
       color: var(--accent);
       margin-bottom: 1.5rem;
     }
 
-    /* Título Impactante */
     .main-title {
       font-family: 'Cinzel', serif;
-      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-size: clamp(2.4rem, 6vw, 4.2rem);
       font-weight: 900;
-      line-height: 1.1;
+      line-height: 1.05;
       margin-bottom: 1.2rem;
-      background: linear-gradient(135deg, #ffffff 30%, var(--primary) 70%, var(--accent) 100%);
+      background: linear-gradient(135deg, #ffffff 20%, #c084fc 60%, #06b6d4 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      text-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
 
     .subtitle {
-      font-size: 1.05rem;
+      font-size: 1.1rem;
       color: var(--text-muted);
-      line-height: 1.6;
-      max-width: 580px;
+      max-width: 620px;
       margin: 0 auto 2.5rem;
+      line-height: 1.7;
     }
 
-    /* Botão Principal Interativo */
-    .btn-start {
+    .btn-action {
       display: inline-flex;
       align-items: center;
-      gap: 12px;
+      justify-content: center;
+      gap: 10px;
       padding: 1.1rem 2.8rem;
-      font-size: 1.1rem;
-      font-weight: 600;
+      font-size: 1.05rem;
+      font-weight: 700;
       color: #fff;
       background: linear-gradient(135deg, #7c3aed, #4f46e5);
       border: none;
       border-radius: 14px;
       cursor: pointer;
-      box-shadow: 0 10px 25px rgba(124, 58, 237, 0.4);
+      box-shadow: 0 10px 25px rgba(124, 58, 237, 0.35);
       transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .btn-start:hover {
-      transform: translateY(-3px) scale(1.03);
-      box-shadow: 0 15px 35px rgba(124, 58, 237, 0.6);
-      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    .btn-action:hover {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 15px 35px rgba(124, 58, 237, 0.55);
     }
 
-    .btn-start:active {
-      transform: translateY(0) scale(0.97);
+    /* --- TELA 2: CRIAÇÃO DE PERSONAGEM --- */
+    .class-selection {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 18px;
+      margin: 2rem 0;
     }
 
-    /* Tela da História (Escondida por padrão) */
-    .story-screen {
-      display: none;
-      opacity: 0;
-      text-align: left;
-      transition: opacity 0.8s ease;
+    .class-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 1.5rem;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.3s ease;
     }
 
-    .story-screen.active {
-      display: block;
-      opacity: 1;
+    .class-card:hover, .class-card.selected {
+      border-color: var(--primary);
+      background: rgba(139, 92, 246, 0.12);
+      transform: translateY(-4px);
     }
 
-    .story-text {
-      font-size: 1.15rem;
+    .class-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .class-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-main);
+    }
+
+    .class-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* --- TELA 3: JOGO E HUD --- */
+    .hud-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1.2rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      font-size: 0.9rem;
+    }
+
+    .stat-group {
+      display: flex;
+      gap: 20px;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 600;
+    }
+
+    .stat-hp { color: var(--danger); }
+    .stat-mana { color: var(--accent); }
+    .stat-gold { color: var(--gold); }
+
+    .story-title-view {
+      font-family: 'Cinzel', serif;
+      font-size: 1.5rem;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .story-box {
+      min-height: 120px;
+      font-size: 1.1rem;
       line-height: 1.8;
       color: #e2e8f0;
-      min-height: 100px;
+      margin-bottom: 2rem;
     }
 
-    /* Controle Mute/Unmute */
-    .sound-toggle {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: rgba(255, 255, 255, 0.05);
+    .choices-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .btn-choice {
+      width: 100%;
+      text-align: left;
+      padding: 1rem 1.4rem;
+      background: rgba(255, 255, 255, 0.04);
       border: 1px solid rgba(255, 255, 255, 0.1);
-      color: var(--text-muted);
-      padding: 8px 14px;
-      border-radius: 20px;
+      border-radius: 12px;
+      color: var(--text-main);
+      font-size: 0.98rem;
       cursor: pointer;
-      font-size: 0.85rem;
-      z-index: 10;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .btn-choice:hover {
+      background: rgba(139, 92, 246, 0.18);
+      border-color: var(--primary-hover);
+      padding-left: 1.8rem;
+    }
+
+    /* Responsividade */
+    @media (max-width: 640px) {
+      .game-card { padding: 2rem 1.5rem; }
+      .stat-group { gap: 10px; font-size: 0.8rem; }
+      .class-selection { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
-  <canvas id="canvas-bg"></canvas>
-  <button class="sound-toggle" id="soundBtn">🔊 Som: ON</button>
+  <canvas id="bg-canvas"></canvas>
 
-  <main class="container" id="gameCard">
-    <!-- TELA DE CAPA -->
-    <div id="coverScreen">
-      <span class="badge">Aventura RPG Interativa</span>
-      <h1 class="main-title">O Enigma de Aethelgard</h1>
-      <p class="subtitle">
-        Uma sombra ancestral desperta nas ruínas esquecidas. Suas decisões moldarão o destino do reino ou o selarão na escuridão eterna.
-      </p>
-      <button class="btn-start" id="startBtn">
-        <span>Iniciar Aventura</span>
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-      </button>
-    </div>
+  <div class="top-bar">
+    <button class="ctrl-btn" id="ambientBtn">🎵 Música: OFF</button>
+    <button class="ctrl-btn" id="sfxBtn">🔊 SFX: ON</button>
+  </div>
 
-    <!-- TELA DO JOGO (AVANÇO VIA JS) -->
-    <div id="storyScreen" class="story-screen">
-      <span class="badge">Capítulo I: O Despertar</span>
-      <p class="story-text" id="typewriterText"></p>
-    </div>
+  <main class="game-card" id="cardContainer">
+    
+    <!-- ETAPA 1: CAPA PRINCIPAL -->
+    <section id="screenCover" class="screen active">
+      <div class="cover-content">
+        <span class="badge-tag">Série de RPG Fantasia</span>
+        <h1 class="main-title">O Enigma de Aethelgard</h1>
+        <p class="subtitle">
+          Nas profundezas da cidadela esquecida, uma força arcana desperta. Faça suas escolhas, forje seu legado e descubra os segredos da névoa.
+        </p>
+        <button class="btn-action" id="btnStartGame">
+          <span>Criar Personagem</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </section>
+
+    <!-- ETAPA 2: CRIAÇÃO DE PERSONAGEM -->
+    <section id="screenChar" class="screen">
+      <span class="badge-tag">Passo 1 de 2</span>
+      <h2 style="font-family:'Cinzel'; margin-bottom:0.5rem;">Escolha sua Classe</h2>
+      <p style="color:var(--text-muted); font-size:0.95rem;">Suas habilidades iniciais influenciarão os caminhos disponíveis na aventura.</p>
+
+      <div class="class-selection">
+        <div class="class-card selected" data-class="guerreiro">
+          <div class="class-icon">⚔️</div>
+          <h3 class="class-title">Guerreiro</h3>
+          <p class="class-desc">Mestre do combate corporal. Possui maior resistência física e vida elevada.</p>
+        </div>
+        <div class="class-card" data-class="mago">
+          <div class="class-icon">🔮</div>
+          <h3 class="class-title">Mago Arcano</h3>
+          <p class="class-desc">Especialista nas artes místicas. Capacidade de decifrar runas e canalizar feitiços.</p>
+        </div>
+        <div class="class-card" data-class="ladino">
+          <div class="class-icon">🗡️</div>
+          <h3 class="class-title">Ladino</h3>
+          <p class="class-desc">Ágil e furtivo. Hábil em desarmar armadilhas e encontrar passagens secretas.</p>
+        </div>
+      </div>
+
+      <div style="text-align: right; margin-top: 1.5rem;">
+        <button class="btn-action" id="btnConfirmChar">
+          <span>Iniciar Aventura</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ETAPA 3: INTERFACE DO JOGO (RPG HUD + NARRATIVA) -->
+    <section id="screenGame" class="screen">
+      <header class="hud-bar">
+        <div>
+          <span id="playerClassTitle" style="font-weight: 700; color: var(--accent);">Guerreiro</span>
+        </div>
+        <div class="stat-group">
+          <div class="stat-item stat-hp">❤️ HP: <span id="valHp">100</span></div>
+          <div class="stat-item stat-mana">🧪 MP: <span id="valMana">50</span></div>
+          <div class="stat-item stat-gold">🪙 Ouro: <span id="valGold">25</span></div>
+        </div>
+      </header>
+
+      <h3 class="story-title-view" id="nodeTitle">Capítulo I: Os Portões de Bronze</h3>
+      <div class="story-box" id="nodeText"></div>
+
+      <div class="choices-container" id="choicesBox"></div>
+    </section>
+
   </main>
 
   <script>
-    // 1. Partículas Animadas no Fundo
-    const canvas = document.getElementById('canvas-bg');
+    // === 1. CANVAS DE PARTÍCULAS INTERATIVAS ===
+    const canvas = document.getElementById('bg-canvas');
     const ctx = canvas.getContext('2d');
     let particles = [];
+    let mouse = { x: null, y: null };
 
-    function resizeCanvas() {
+    function initCanvas() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     }
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+    window.addEventListener('resize', initCanvas);
+    initCanvas();
+
+    window.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
 
     class Particle {
       constructor() {
+        this.reset();
+      }
+      reset() {
         this.x = Math.random() * canvas.width;
         this.y = Math.random() * canvas.height;
         this.size = Math.random() * 2 + 0.5;
-        this.speedY = Math.random() * -0.5 - 0.2;
-        this.alpha = Math.random() * 0.6 + 0.2;
+        this.speedY = Math.random() * -0.6 - 0.2;
+        this.speedX = (Math.random() - 0.5) * 0.3;
+        this.alpha = Math.random() * 0.5 + 0.2;
       }
       update() {
         this.y += this.speedY;
-        if (this.y < 0) this.y = canvas.height;
+        this.x += this.speedX;
+
+        // Reação ao mouse
+        if (mouse.x && mouse.y) {
+          let dx = mouse.x - this.x;
+          let dy = mouse.y - this.y;
+          let dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            this.x -= dx * 0.02;
+            this.y -= dy * 0.02;
+          }
+        }
+
+        if (this.y < 0 || this.x < 0 || this.x > canvas.width) {
+          this.reset();
+          this.y = canvas.height;
+        }
       }
       draw() {
         ctx.fillStyle = `rgba(139, 92, 246, ${this.alpha})`;
@@ -218,79 +423,224 @@
       }
     }
 
-    for (let i = 0; i < 60; i++) particles.push(new Particle());
+    for (let i = 0; i < 75; i++) particles.push(new Particle());
 
-    function animate() {
+    function renderLoop() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       particles.forEach(p => { p.update(); p.draw(); });
-      requestAnimationFrame(animate);
+      requestAnimationFrame(renderLoop);
     }
-    animate();
+    renderLoop();
 
-    // 2. Sintetizador de Áudio (Sem necessidade de downloads extras)
-    let soundEnabled = true;
-    const soundBtn = document.getElementById('soundBtn');
+    // === 2. EFEITO PARALLAX 3D NO CARD ===
+    const card = document.getElementById('cardContainer');
+    document.addEventListener('mousemove', (e) => {
+      const xAxis = (window.innerWidth / 2 - e.pageX) / 45;
+      const yAxis = (window.innerHeight / 2 - e.pageY) / 45;
+      card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+    });
 
-    soundBtn.addEventListener('click', () => {
-      soundEnabled = !soundEnabled;
-      soundBtn.textContent = soundEnabled ? '🔊 Som: ON' : '🔇 Som: OFF';
+    // === 3. SISTEMA DE ÁUDIO SINTÉTICO (SEM ARQUIVOS EXTERNOS) ===
+    let sfxOn = true;
+    let ambientOn = false;
+    let audioCtx = null;
+    let ambientOsc = null;
+
+    function getAudioContext() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return audioCtx;
+    }
+
+    document.getElementById('sfxBtn').addEventListener('click', (e) => {
+      sfxOn = !sfxOn;
+      e.target.textContent = sfxOn ? '🔊 SFX: ON' : '🔇 SFX: OFF';
+    });
+
+    document.getElementById('ambientBtn').addEventListener('click', (e) => {
+      ambientOn = !ambientOn;
+      e.target.textContent = ambientOn ? '🎵 Música: ON' : '🎵 Música: OFF';
+      if (ambientOn) startAmbientSound();
+      else stopAmbientSound();
     });
 
     function playSound(type) {
-      if (!soundEnabled) return;
-      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      
+      if (!sfxOn) return;
+      const ctx = getAudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      gain.connect(ctx.destination);
 
       if (type === 'hover') {
-        osc.frequency.setValueAtTime(320, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.015, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+        osc.frequency.setValueAtTime(300, ctx.currentTime);
+        gain.gain.setValueAtTime(0.01, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.08);
-      } else if (type === 'start') {
-        osc.frequency.setValueAtTime(200, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(580, audioCtx.currentTime + 0.4);
-        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+        osc.stop(ctx.currentTime + 0.05);
+      } else if (type === 'click') {
+        osc.frequency.setValueAtTime(180, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.2);
+        gain.gain.setValueAtTime(0.05, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
         osc.start();
-        osc.stop(audioCtx.currentTime + 0.4);
+        osc.stop(ctx.currentTime + 0.2);
       }
     }
 
-    // 3. Controle da Interface e Transição
-    const startBtn = document.getElementById('startBtn');
-    const coverScreen = document.getElementById('coverScreen');
-    const storyScreen = document.getElementById('storyScreen');
-    const typewriterElement = document.getElementById('typewriterText');
+    function startAmbientSound() {
+      const ctx = getAudioContext();
+      ambientOsc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      ambientOsc.type = 'sine';
+      ambientOsc.frequency.setValueAtTime(65.41, ctx.currentTime); // Nota C2 (Drone)
+      gain.gain.setValueAtTime(0.02, ctx.currentTime);
+      ambientOsc.connect(gain);
+      gain.connect(ctx.destination);
+      ambientOsc.start();
+    }
 
-    startBtn.addEventListener('mouseenter', () => playSound('hover'));
+    function stopAmbientSound() {
+      if (ambientOsc) {
+        ambientOsc.stop();
+        ambientOsc = null;
+      }
+    }
 
-    startBtn.addEventListener('click', () => {
-      playSound('start');
-      
-      coverScreen.style.opacity = '0';
-      setTimeout(() => {
-        coverScreen.style.display = 'none';
-        storyScreen.classList.add('active');
-        
-        // Efeito Máquina de Escrever para a introdução da história
-        const introText = "O vento gélido uiva pelos corredores de pedra de Aethelgard. Você segura a tocha com firmeza enquanto a pesada porta de bronze se fecha atrás de você. O jogo começou...";
-        let index = 0;
-        
-        function typeWriter() {
-          if (index < introText.length) {
-            typewriterElement.textContent += introText.charAt(index);
-            index++;
-            setTimeout(typeWriter, 35);
-          }
-        }
-        typeWriter();
-      }, 500);
+    // === 4. NARRATIVA E MOTOR DO JOGO ===
+    let player = { class: 'guerreiro', hp: 100, mana: 50, gold: 25 };
+
+    const storyNodes = {
+      start: {
+        title: "Capítulo I: Os Portões de Bronze",
+        text: "Você se encontra diante dos imponentes portões de Aethelgard. Inscrições arcanas brilham suavemente na pedra fria. O ar cheira a ozônio e poeira secular.",
+        choices: [
+          { text: "Forçar a abertura da porta reforçada", reqClass: 'guerreiro', nextNode: 'forceDoor' },
+          { text: "Canalizar mana para decifrar as runas", reqClass: 'mago', nextNode: 'readRunes' },
+          { text: "Procurar uma entrada secreta pelas sombras", nextNode: 'stealthEntry' }
+        ]
+      },
+      forceDoor: {
+        title: "A Força Bruta",
+        text: "Utilizando seu vigor físico, você empurra as pesadas folhas de bronze. Com um rangido ensurdecedor, os portões cdem, revelando um salão iluminado por cristais misteriosos.",
+        choices: [
+          { text: "Avançar para o salão dos cristais", nextNode: 'crystalHall' }
+        ]
+      },
+      readRunes: {
+        title: "O Despertar Arcano",
+        text: "Seus dedos deslizam pelas runas. A energia mística flui para seus circuitos mágicos, ativando um mecanismo ancestral que abre o portal suavemente.",
+        choices: [
+          { text: "Avançar para o salão dos cristais", nextNode: 'crystalHall' }
+        ]
+      },
+      stealthEntry: {
+        title: "Sombra Silenciosa",
+        text: "Você encontra uma fenda na estrutura lateral. Com agilidade, desliza para o interior sem fazer barulho, passando despercebido pelas vigias automáticas.",
+        choices: [
+          { text: "Avançar para o salão dos cristais", nextNode: 'crystalHall' }
+        ]
+      },
+      crystalHall: {
+        title: "Capítulo II: O Salão dos Cristais",
+        text: "A aventura está apenas começando. À sua frente, um pedestal guarda o lendário Amuleto de Aethelgard...",
+        choices: [
+          { text: "Recomeçar Jornada", nextNode: 'start' }
+        ]
+      }
+    };
+
+    // === 5. NAVEGAÇÃO ENTRE TELAS ===
+    const screenCover = document.getElementById('screenCover');
+    const screenChar = document.getElementById('screenChar');
+    const screenGame = document.getElementById('screenGame');
+
+    document.getElementById('btnStartGame').addEventListener('click', () => {
+      playSound('click');
+      switchScreen(screenCover, screenChar);
     });
+
+    // Seleção de Classe
+    const classCards = document.querySelectorAll('.class-card');
+    classCards.forEach(card => {
+      card.addEventListener('mouseenter', () => playSound('hover'));
+      card.addEventListener('click', () => {
+        playSound('click');
+        classCards.forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        player.class = card.dataset.class;
+      });
+    });
+
+    document.getElementById('btnConfirmChar').addEventListener('click', () => {
+      playSound('click');
+      setupStatsByClass();
+      switchScreen(screenChar, screenGame);
+      loadStoryNode('start');
+    });
+
+    function switchScreen(from, to) {
+      from.style.opacity = '0';
+      setTimeout(() => {
+        from.classList.remove('active');
+        to.classList.add('active');
+        setTimeout(() => to.style.opacity = '1', 50);
+      }, 400);
+    }
+
+    function setupStatsByClass() {
+      if (player.class === 'guerreiro') {
+        player.hp = 120; player.mana = 20; player.gold = 15;
+      } else if (player.class === 'mago') {
+        player.hp = 80; player.mana = 100; player.gold = 30;
+      } else {
+        player.hp = 95; player.mana = 40; player.gold = 50;
+      }
+      document.getElementById('playerClassTitle').textContent = player.class.toUpperCase();
+      document.getElementById('valHp').textContent = player.hp;
+      document.getElementById('valMana').textContent = player.mana;
+      document.getElementById('valGold').textContent = player.gold;
+    }
+
+    function loadStoryNode(nodeKey) {
+      const node = storyNodes[nodeKey];
+      document.getElementById('nodeTitle').textContent = node.title;
+      
+      const textElement = document.getElementById('nodeText');
+      const choicesBox = document.getElementById('choicesBox');
+      
+      textElement.textContent = '';
+      choicesBox.innerHTML = '';
+
+      // Máquina de Escrever
+      let index = 0;
+      function type() {
+        if (index < node.text.length) {
+          textElement.textContent += node.text.charAt(index);
+          index++;
+          setTimeout(type, 20);
+        } else {
+          renderChoices(node.choices);
+        }
+      }
+      type();
+    }
+
+    function renderChoices(choices) {
+      const choicesBox = document.getElementById('choicesBox');
+      choices.forEach(c => {
+        if (c.reqClass && c.reqClass !== player.class) return;
+
+        const btn = document.createElement('button');
+        btn.className = 'btn-choice';
+        btn.innerHTML = `<span>${c.text}</span> <span>➔</span>`;
+        btn.addEventListener('mouseenter', () => playSound('hover'));
+        btn.addEventListener('click', () => {
+          playSound('click');
+          loadStoryNode(c.nextNode);
+        });
+        choicesBox.appendChild(btn);
+      });
+    }
   </script>
 </body>
 </html>
