@@ -1,186 +1,296 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A Lenda do Abismo Sombrio — Edição Definitiva</title>
-    <link rel="stylesheet" href="styles.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@500;700;900&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
-</head>
-<body data-theme="dark">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>O Enigma de Aethelgard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Plus+Jakarta+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #080911;
+      --primary: #8b5cf6;
+      --primary-glow: rgba(139, 92, 246, 0.4);
+      --accent: #06b6d4;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --card-bg: rgba(15, 23, 42, 0.7);
+    }
 
-    <!-- Partículas e Efeitos de Fundo Dinâmicos -->
-    <div class="ambient-background">
-        <div class="particle-field" id="particles"></div>
-        <div class="glow-orb orb-primary"></div>
-        <div class="glow-orb orb-secondary"></div>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Fundo dinâmico com Canvas */
+    #canvas-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Container Principal Glassmorphic */
+    .container {
+      position: relative;
+      z-index: 2;
+      width: 90%;
+      max-width: 800px;
+      padding: 3.5rem 2.5rem;
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 40px var(--primary-glow);
+      text-align: center;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 16px;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 50px;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Título Impactante */
+    .main-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(2.2rem, 5vw, 3.8rem);
+      font-weight: 900;
+      line-height: 1.1;
+      margin-bottom: 1.2rem;
+      background: linear-gradient(135deg, #ffffff 30%, var(--primary) 70%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      max-width: 580px;
+      margin: 0 auto 2.5rem;
+    }
+
+    /* Botão Principal Interativo */
+    .btn-start {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 1.1rem 2.8rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, #7c3aed, #4f46e5);
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(124, 58, 237, 0.4);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .btn-start:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 15px 35px rgba(124, 58, 237, 0.6);
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+    }
+
+    .btn-start:active {
+      transform: translateY(0) scale(0.97);
+    }
+
+    /* Tela da História (Escondida por padrão) */
+    .story-screen {
+      display: none;
+      opacity: 0;
+      text-align: left;
+      transition: opacity 0.8s ease;
+    }
+
+    .story-screen.active {
+      display: block;
+      opacity: 1;
+    }
+
+    .story-text {
+      font-size: 1.15rem;
+      line-height: 1.8;
+      color: #e2e8f0;
+      min-height: 100px;
+    }
+
+    /* Controle Mute/Unmute */
+    .sound-toggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      padding: 8px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="canvas-bg"></canvas>
+  <button class="sound-toggle" id="soundBtn">🔊 Som: ON</button>
+
+  <main class="container" id="gameCard">
+    <!-- TELA DE CAPA -->
+    <div id="coverScreen">
+      <span class="badge">Aventura RPG Interativa</span>
+      <h1 class="main-title">O Enigma de Aethelgard</h1>
+      <p class="subtitle">
+        Uma sombra ancestral desperta nas ruínas esquecidas. Suas decisões moldarão o destino do reino ou o selarão na escuridão eterna.
+      </p>
+      <button class="btn-start" id="startBtn">
+        <span>Iniciar Aventura</span>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
     </div>
 
-    <!-- ==================== TELA DE CAPA / INICIAL ==================== -->
-    <section id="cover-screen" class="screen active">
-        <div class="cover-container">
-            <header class="cover-header">
-                <span class="hero-badge" data-badge="rpg">
-                    <span class="badge-dot"></span> RPG Interativo Imersivo
-                </span>
-                <h1 class="hero-title">
-                    <span class="title-sub">A LENDA DO</span>
-                    <span class="title-main">ABISMO SOMBRIO</span>
-                </h1>
-                <p class="hero-tagline">
-                    As profundezas do abismo guardam tesouros incalculáveis e horrores esquecidos. Escolha seu destino com sabedoria, pois cada decisão deixará uma marca permanente na sua jornada.
-                </p>
-            </header>
+    <!-- TELA DO JOGO (AVANÇO VIA JS) -->
+    <div id="storyScreen" class="story-screen">
+      <span class="badge">Capítulo I: O Despertar</span>
+      <p class="story-text" id="typewriterText"></p>
+    </div>
+  </main>
 
-            <!-- Seleção de Classe de Personagem -->
-            <div class="class-selection">
-                <h2 class="section-label">Escolha sua Classe:</h2>
-                <div class="class-grid">
-                    <button class="class-card active" data-class="guerreiro">
-                        <div class="class-icon">⚔️</div>
-                        <div class="class-info">
-                            <h3>Guerreiro</h3>
-                            <p>+30 HP Inicial, Resistente a Danos</p>
-                        </div>
-                    </button>
-                    <button class="class-card" data-class="mago">
-                        <div class="class-icon">🔮</div>
-                        <div class="class-info">
-                            <h3>Mago</h3>
-                            <p>Começa com Pergaminho Mágico</p>
-                        </div>
-                    </button>
-                    <button class="class-card" data-class="ladino">
-                        <div class="class-icon">🗡️</div>
-                        <div class="class-info">
-                            <h3>Ladino</h3>
-                            <p>+25 Moedas Bônus, Furtividade</p>
-                        </div>
-                    </button>
-                </div>
-            </div>
+  <script>
+    // 1. Partículas Animadas no Fundo
+    const canvas = document.getElementById('canvas-bg');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
 
-            <!-- Ação Principal -->
-            <div class="cover-actions">
-                <button id="btn-start-game" class="btn-hero glow-effect" data-action="start">
-                    <span class="btn-text">INICIAR AVENTURA</span>
-                    <span class="btn-arrow">➔</span>
-                </button>
-            </div>
-        </div>
-    </section>
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
 
-    <!-- ==================== TELA PRINCIPAL DO JOGO ==================== -->
-    <section id="game-screen" class="screen hidden">
-        <div class="game-layout">
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.size = Math.random() * 2 + 0.5;
+        this.speedY = Math.random() * -0.5 - 0.2;
+        this.alpha = Math.random() * 0.6 + 0.2;
+      }
+      update() {
+        this.y += this.speedY;
+        if (this.y < 0) this.y = canvas.height;
+      }
+      draw() {
+        ctx.fillStyle = `rgba(139, 92, 246, ${this.alpha})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
 
-            <!-- BARRA SUPERIOR: Atributos do Jogador -->
-            <header class="hud-header">
-                <div class="player-profile">
-                    <div class="avatar-frame">
-                        <span id="player-avatar" class="avatar-icon">⚔️</span>
-                    </div>
-                    <div class="player-details">
-                        <span id="player-class-title" class="player-title">Guerreiro do Abismo</span>
-                        <div class="level-tag">Nível <span id="player-level">1</span></div>
-                    </div>
-                </div>
+    for (let i = 0; i < 60; i++) particles.push(new Particle());
 
-                <div class="hud-stats">
-                    <!-- Barra de Vida -->
-                    <div class="stat-group" data-stat="health">
-                        <div class="stat-header">
-                            <span class="stat-name">Vida (HP)</span>
-                            <span id="health-val" class="stat-number">100 / 100</span>
-                        </div>
-                        <div class="bar-track">
-                            <div id="health-bar" class="bar-fill health-fill" style="width: 100%;"></div>
-                        </div>
-                    </div>
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => { p.update(); p.draw(); });
+      requestAnimationFrame(animate);
+    }
+    animate();
 
-                    <!-- Recurso Secundário: Ouro -->
-                    <div class="stat-pill" data-stat="gold">
-                        <span class="pill-icon">🪙</span>
-                        <div class="pill-content">
-                            <span class="pill-label">Ouro</span>
-                            <span id="gold-val" class="pill-value">25</span>
-                        </div>
-                    </div>
+    // 2. Sintetizador de Áudio (Sem necessidade de downloads extras)
+    let soundEnabled = true;
+    const soundBtn = document.getElementById('soundBtn');
 
-                    <!-- Atributo de Status Atual -->
-                    <div class="stat-pill" data-stat="status">
-                        <span class="pill-icon">🛡️</span>
-                        <div class="pill-content">
-                            <span class="pill-label">Estado</span>
-                            <span id="status-badge" class="badge-status" data-state="saudavel">Saudável</span>
-                        </div>
-                    </div>
-                </div>
-            </header>
+    soundBtn.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      soundBtn.textContent = soundEnabled ? '🔊 Som: ON' : '🔇 Som: OFF';
+    });
 
-            <!-- CONTEÚDO PRINCIPAL: História + Painéis laterais -->
-            <main class="hud-main">
+    function playSound(type) {
+      if (!soundEnabled) return;
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
 
-                <!-- PAINEL DA HISTÓRIA -->
-                <section class="story-viewport">
-                    <div id="location-header" class="location-banner" data-location="caverna">
-                        <span class="location-icon">📍</span>
-                        <span id="location-title" class="location-name">Entrada do Abismo</span>
-                    </div>
+      if (type === 'hover') {
+        osc.frequency.setValueAtTime(320, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.015, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.08);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.08);
+      } else if (type === 'start') {
+        osc.frequency.setValueAtTime(200, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(580, audioCtx.currentTime + 0.4);
+        gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      }
+    }
 
-                    <div id="story-card" class="story-card-body" data-step="1">
-                        <p id="story-text" class="story-paragraph">
-                            Carregando crônicas do abismo...
-                        </p>
-                    </div>
+    // 3. Controle da Interface e Transição
+    const startBtn = document.getElementById('startBtn');
+    const coverScreen = document.getElementById('coverScreen');
+    const storyScreen = document.getElementById('storyScreen');
+    const typewriterElement = document.getElementById('typewriterText');
 
-                    <!-- Container de Escolhas/Ações -->
-                    <div class="interactive-choices">
-                        <h3 class="choices-title">Qual será sua próxima ação?</h3>
-                        <div id="choices-container" class="choices-stack">
-                            <!-- Injetado dinamicamente via JS -->
-                        </div>
-                    </div>
-                </section>
+    startBtn.addEventListener('mouseenter', () => playSound('hover'));
 
-                <!-- PAINEL LATERAL: Inventário e Diário -->
-                <aside class="hud-sidebar">
-                    
-                    <!-- Aba de Inventário Interativo -->
-                    <div class="sidebar-card">
-                        <div class="card-header">
-                            <h3>🎒 Inventário</h3>
-                            <span id="inventory-count" class="item-counter">0/6</span>
-                        </div>
-                        <ul id="inventory-list" class="inventory-grid">
-                            <!-- Itens gerados dinamicamente pelo JS -->
-                        </ul>
-                    </div>
-
-                    <!-- Aba de Diário de Registro -->
-                    <div class="sidebar-card log-card">
-                        <div class="card-header">
-                            <h3>📜 Diário de Registro</h3>
-                        </div>
-                        <div id="log-box" class="log-stream">
-                            <!-- Logs de eventos adicionados aqui -->
-                        </div>
-                    </div>
-
-                    <!-- Ações Rápidas do Sistema -->
-                    <div class="system-actions">
-                        <button id="btn-restart" class="btn-system-danger" data-action="restart">
-                            🔄 Reiniciar Aventura
-                        </button>
-                    </div>
-                </aside>
-
-            </main>
-        </div>
-    </section>
-
-    <script src="script.js"></script>
+    startBtn.addEventListener('click', () => {
+      playSound('start');
+      
+      coverScreen.style.opacity = '0';
+      setTimeout(() => {
+        coverScreen.style.display = 'none';
+        storyScreen.classList.add('active');
+        
+        // Efeito Máquina de Escrever para a introdução da história
+        const introText = "O vento gélido uiva pelos corredores de pedra de Aethelgard. Você segura a tocha com firmeza enquanto a pesada porta de bronze se fecha atrás de você. O jogo começou...";
+        let index = 0;
+        
+        function typeWriter() {
+          if (index < introText.length) {
+            typewriterElement.textContent += introText.charAt(index);
+            index++;
+            setTimeout(typeWriter, 35);
+          }
+        }
+        typeWriter();
+      }, 500);
+    });
+  </script>
 </body>
 </html>
