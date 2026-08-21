@@ -3,65 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A Lenda do Abismo Sombrio</title>
+    <title>A Lenda do Abismo Sombrio - Aventura Interativa</title>
     <link rel="stylesheet" href="styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <!-- Fontes do Google Fonts para estilo épico e moderno -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="background-overlay"></div>
-    
-    <div class="game-wrapper">
-        <header class="game-header">
-            <h1 class="game-title">A Lenda do Abismo Sombrio</h1>
-            <div class="stats-panel">
-                <div class="stat-box">
-                    <span class="stat-label">Vida</span>
-                    <div class="health-bar-container">
-                        <div id="health-bar" class="health-bar-fill" style="width: 100%;"></div>
+
+    <!-- Efeito visual de luz de fundo -->
+    <div class="glow-bg"></div>
+
+    <!-- ==================== TELA DE CAPA / INICIAL ==================== -->
+    <section id="cover-screen" class="screen active">
+        <div class="cover-card">
+            <span class="badge-tag">RPG de Texto Interativo</span>
+            <h1 class="cover-title">A Lenda do<br><span class="highlight">Abismo Sombrio</span></h1>
+            <p class="cover-description">
+                Uma jornada sombria aguarda por você nas profundezas da terra. 
+                Suas escolhas ditarão o seu destino, sua sobrevivência e o seu ouro. Você está preparado?
+            </p>
+            
+            <button id="btn-start" class="btn-primary glow-effect" data-action="start">
+                <span class="btn-text">Iniciar Aventura</span>
+                <span class="btn-icon">➔</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- ==================== TELA PRINCIPAL DO JOGO ==================== -->
+    <section id="game-screen" class="screen hidden">
+        <div class="game-wrapper">
+            
+            <!-- Cabeçalho com Status do Jogador -->
+            <header class="game-header">
+                <div class="header-title-box">
+                    <h2 class="game-subtitle">A Lenda do Abismo Sombrio</h2>
+                    <span id="location-tag" class="location-badge" data-location="cave">Entrada da Caverna</span>
+                </div>
+
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <span class="stat-label">Vida</span>
+                        <div class="progress-bar">
+                            <div id="health-bar" class="progress-fill" style="width: 100%;"></div>
+                        </div>
+                        <span id="health-val" class="stat-val">100 HP</span>
                     </div>
-                    <span id="health-val" class="stat-value">100 HP</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-label">Ouro</span>
-                    <span id="gold-val" class="stat-value">25 Moedas</span>
-                </div>
-                <div class="stat-box">
-                    <span class="stat-label">Status</span>
-                    <span id="status-badge" class="badge" data-state="normal">Explorando</span>
-                </div>
-            </div>
-        </header>
 
-        <main class="main-layout">
-            <section class="adventure-container">
-                <div id="story-card" class="story-card" data-location="cave-entrance">
-                    <span id="location-tag" class="location-tag">Entrada do Abismo</span>
-                    <p id="story-text" class="story-text">Carregando diário de bordo...</p>
-                </div>
+                    <div class="stat-card">
+                        <span class="stat-label">Ouro</span>
+                        <span id="gold-val" class="stat-val gold-text">25 Moedas</span>
+                    </div>
 
-                <div class="choices-section">
-                    <h3>Opções de Ação</h3>
-                    <div id="choices-container" class="choices-grid"></div>
+                    <div class="stat-card">
+                        <span class="stat-label">Estado</span>
+                        <span id="status-badge" class="status-badge" data-state="normal">Explorando</span>
+                    </div>
                 </div>
-            </section>
+            </header>
 
-            <aside class="sidebar">
-                <div class="panel inventory-panel">
-                    <h3>Inventário</h3>
-                    <ul id="inventory-list" class="inventory-list">
-                        <!-- Itens renderizados dinamicamente -->
-                    </ul>
-                </div>
-
-                <div class="panel log-panel">
-                    <h3>Histórico de Ações</h3>
-                    <div id="log-box" class="log-box"></div>
-                </div>
+            <!-- Layout Principal: História + Painel Lateral -->
+            <main class="main-content">
                 
-                <button id="restart-btn" class="btn-restart">Reiniciar Aventura</button>
-            </aside>
-        </main>
-    </div>
+                <!-- Área Central da História -->
+                <div class="story-container">
+                    <article id="story-card" class="story-card" data-step="1">
+                        <p id="story-text" class="story-text">Carregando história...</p>
+                    </article>
+
+                    <nav class="choices-wrapper">
+                        <h3 class="section-title">O que você fará?</h3>
+                        <div id="choices-container" class="choices-grid">
+                            <!-- Botões de escolha inseridos dinamicamente pelo JS -->
+                        </div>
+                    </nav>
+                </div>
+
+                <!-- Painel Lateral: Inventário e Log -->
+                <aside class="sidebar">
+                    <div class="panel">
+                        <h3 class="section-title">Inventário</h3>
+                        <ul id="inventory-list" class="inventory-grid">
+                            <!-- Itens do inventário dinâmicos -->
+                        </ul>
+                    </div>
+
+                    <div class="panel">
+                        <h3 class="section-title">Diário de Bordo</h3>
+                        <div id="log-box" class="log-box">
+                            <!-- Histórico de ações registrado aqui -->
+                        </div>
+                    </div>
+
+                    <button id="btn-restart" class="btn-secondary" data-action="restart">Reiniciar Aventura</button>
+                </aside>
+
+            </main>
+        </div>
+    </section>
 
     <script src="script.js"></script>
 </body>
