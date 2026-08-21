@@ -1,56 +1,61 @@
-// Estado global do jogador
-const playerState = {
+// ==================== ESTADO DO JOGO ====================
+const gameState = {
     health: 100,
     gold: 25,
     inventory: ["Tocha", "Poção de Cura"],
-    currentStep: 1,
-    status: "normal"
+    currentStep: 1
 };
 
-// Mapeamento dos elementos do DOM
-const dom = {
+// ==================== MAPEAMENTO DE ELEMENTOS DO DOM ====================
+const elements = {
+    // Telas
+    coverScreen: document.getElementById('cover-screen'),
+    gameScreen: document.getElementById('game-screen'),
+    btnStart: document.getElementById('btn-start'),
+    btnRestart: document.getElementById('btn-restart'),
+    
+    // Elementos do Jogo
+    storyCard: document.getElementById('story-card'),
     storyText: document.getElementById('story-text'),
     locationTag: document.getElementById('location-tag'),
     choicesContainer: document.getElementById('choices-container'),
-    storyCard: document.getElementById('story-card'),
     healthBar: document.getElementById('health-bar'),
     healthVal: document.getElementById('health-val'),
     goldVal: document.getElementById('gold-val'),
     statusBadge: document.getElementById('status-badge'),
     inventoryList: document.getElementById('inventory-list'),
-    logBox: document.getElementById('log-box'),
-    restartBtn: document.getElementById('restart-btn')
+    logBox: document.getElementById('log-box')
 };
 
-// Base de dados expandida da aventura
-const storyNodes = {
+// ==================== BANCO DE DADOS DA HISTÓRIA ====================
+const storyTree = {
     1: {
-        location: "Entrada da Caverna",
-        text: "Diante de você está a colossal Boca do Abismo. O vento uiva alto e a escuridão é densa. Você segura sua tocha acesa enquanto observa duas passagens.",
+        location: "Entrada do Abismo",
+        text: "Você está diante da colossal entrada do Abismo Sombrio. O ar é frio e o som do vento causa calafrios. Com sua tocha acesa, você avista duas passagens.",
         status: "normal",
         choices: [
-            { text: "Entrar pelo túnel rochoso à esquerda", nextStep: 2, actionLog: "Você entrou no túnel escuro." },
-            { text: "Seguir o caminho descendente à direita", nextStep: 3, actionLog: "Você desceu a encosta inclinada." }
+            { text: "Entrar pelo túnel rochoso à esquerda", nextStep: 2, log: "Você entrou no túnel escuro." },
+            { text: "Descender pelo caminho à direita", nextStep: 3, log: "Você desceu o caminho inclinado." }
         ]
     },
     2: {
         location: "Túnel dos Cristais",
-        text: "Cristais púrpuras cobrem as paredes. À frente, um goblin guardião dorme encostado em um baú ornamentado.",
+        text: "Cristais roxos iluminam levemente o caminho. Um goblin guardião dorme profundamente ao lado de um baú antigo.",
         status: "perigo",
         choices: [
             { 
-                text: "Tentar roubar o baú furtivamente", 
+                text: "Tentar roubar o baú silenciosamente", 
                 nextStep: 4, 
-                actionLog: "Você tentou passar sem fazer barulho.",
-                effect: () => updateHealth(-20)
+                log: "O goblin acordou e atacou você antes de fugir!",
+                effect: () => applyDamage(20)
             },
             { 
-                text: "Usar Poção de Cura para recuperar energia e contornar", 
+                text: "Usar Poção de Cura e passar com cuidado", 
                 nextStep: 5, 
                 requiredItem: "Poção de Cura",
-                actionLog: "Você usou uma poção de cura e contornou o inimigo com calma.",
+                log: "Você bebeu a poção, recuperou vida e contornou o inimigo.",
                 effect: () => {
-                    updateHealth(30);
+                    healPlayer(30);
                     removeItem("Poção de Cura");
                 }
             }
@@ -58,208 +63,229 @@ const storyNodes = {
     },
     3: {
         location: "Rio Subterrâneo",
-        text: "Um rio de águas rápidas bloqueia a passagem. Há um barqueiro misterioso com uma canoa de madeira escura.",
+        text: "Um rio de águas escuras e turbulentas corta a caverna. Um barqueiro misterioso aguarda em silêncio.",
         status: "normal",
         choices: [
             { 
                 text: "Pagar 15 moedas de ouro para atravessar", 
                 nextStep: 6, 
                 requiredGold: 15,
-                actionLog: "Você pagou o barqueiro para fazer a travessia.",
+                log: "Você pagou o barqueiro e atravessou o rio em segurança.",
                 effect: () => updateGold(-15)
             },
             { 
-                text: "Tentar atravessar o rio a nadar", 
+                text: "Tentar atravessar a nadar", 
                 nextStep: 7, 
-                actionLog: "Você se jogou na correnteza violenta.",
-                effect: () => updateHealth(-40)
+                log: "A correnteza era forte demais! Você foi arrastado e ferido.",
+                effect: () => applyDamage(40)
             }
         ]
     },
     4: {
-        location: "Emboscada!",
-        text: "O goblin acorda, ataca com uma adaga e escapa rindo! Você sofreu dano, mas encontrou uma Chave Dourada no chão.",
+        location: "Sala do Guardião",
+        text: "Você sofreu danos, mas encontrou uma Chave Dourada deixada para trás pelo goblin em fuga.",
         status: "perigo",
         choices: [
             { 
-                text: "Pegar a chave e avançar para o Salão Principal", 
+                text: "Pegar a Chave Dourada e prosseguir", 
                 nextStep: 8, 
-                actionLog: "Você coletou a chave e avançou.",
+                log: "Chave Dourada adicionada ao inventário.",
                 effect: () => addItem("Chave Dourada")
             }
         ]
     },
     5: {
-        location: "Caminho Oculto",
-        text: "Você contornou o guardião em segurança e encontrou um baú abandonado contendo 50 moedas de ouro!",
+        location: "Câmara Secreta",
+        text: "Você encontrou uma sala escondida cheia de suprimentos e um baú com 40 moedas de ouro!",
         status: "normal",
         choices: [
             { 
-                text: "Coletar o tesouro e prosseguir", 
+                text: "Pegar o ouro e ir para o Salão Principal", 
                 nextStep: 8, 
-                actionLog: "Você coletou 50 moedas de ouro.",
-                effect: () => updateGold(50)
+                log: "Você recolheu 40 moedas de ouro.",
+                effect: () => updateGold(40)
             }
         ]
     },
     6: {
-        location: "An Câmara do Portal",
-        text: "O barqueiro o deixa com segurança diante de uma grande porta selada com uma fechadura de ouro maciço.",
+        location: "Portal Antigo",
+        text: "O barqueiro o deixou em uma grande câmara com um portal trancado por uma fechadura de ouro.",
         status: "normal",
         choices: [
             { 
-                text: "Usar a Chave Dourada na fechadura", 
+                text: "Usar a Chave Dourada para abrir o portal", 
                 nextStep: 9, 
                 requiredItem: "Chave Dourada",
-                actionLog: "Você destrancou o portal com a Chave Dourada." 
+                log: "Você destrancou o portal com a chave!" 
             },
             { 
-                text: "Procurar outro caminho pelas pedras", 
+                text: "Forçar a passagem pelas pedras ao lado", 
                 nextStep: 7, 
-                actionLog: "Você tentou escalada arriscada." 
+                log: "As pedras desmoronaram sobre você!" 
             }
         ]
     },
     7: {
-        location: "Abismo Profundo",
-        text: "As feridas sofridas no caminho foram severas demais. As forças faltaram e a escuridão tomou conta...",
+        location: "Derrota no Abismo",
+        text: "Seus ferimentos foram graves demais e suas forças se esgotaram nas trevas...",
         status: "perigo",
         choices: [
-            { text: "Tentar novamente", nextStep: 1, actionLog: "Reiniciando a jornada..." }
+            { text: "Tentar novamente", nextStep: 1, log: "Reiniciando a aventura..." }
         ]
     },
     8: {
-        location: "Salão Principal",
-        text: "Você encontra a lendária Porta do Destino. Um brilho dourado indica que a saída final está logo adiante.",
+        location: "Salão do Destino",
+        text: "Uma grande luz dourada surge ao fim do corredor. É a saída secreta do Abismo Sombrio!",
         status: "normal",
         choices: [
-            { 
-                text: "Abrir a porta e escapar com as riquezas", 
-                nextStep: 9, 
-                actionLog: "Você alcançou a saída!" 
-            }
+            { text: "Marchar em direção à luz e escapar", nextStep: 9, log: "Você escapou da caverna com vida!" }
         ]
     },
     9: {
-        location: "Superfície - Vitória",
-        text: "Você emergiu do abismo sob o céu estrelado! A aventura foi concluída com sucesso!",
+        location: "Superfície - Vitória!",
+        text: "Parabéns! Você emergiu vitorioso sob o céu estrelado, carregando riquezas e glória!",
         status: "vitoria",
         choices: [
-            { text: "Jogar novamente", nextStep: 1, actionLog: "Iniciando nova partida..." }
+            { text: "Jogar novamente", nextStep: 1, log: "Iniciando nova jornada..." }
         ]
     }
 };
 
-// Funções de atualização de estado do jogador
-function updateHealth(amount) {
-    playerState.health = Math.max(0, Math.min(100, playerState.health + amount));
-    dom.healthBar.style.width = `${playerState.health}%`;
-    dom.healthVal.innerText = `${playerState.health} HP`;
-    if (playerState.health <= 0) {
-        renderStep(7);
+// ==================== LÓGICA DE TRANSIÇÃO DE TELAS ====================
+// EventListener no botão da Capa para Iniciar a História
+elements.btnStart.addEventListener('click', () => {
+    // Esconde a tela de capa e exibe a tela de jogo
+    elements.coverScreen.classList.remove('active');
+    elements.coverScreen.classList.add('hidden');
+    
+    elements.gameScreen.classList.remove('hidden');
+    elements.gameScreen.classList.add('active');
+
+    // Inicializa a aventura no passo 1
+    initGame();
+});
+
+// EventListener para reiniciar o jogo
+elements.btnRestart.addEventListener('click', () => {
+    initGame();
+});
+
+// ==================== FUNÇÕES DE ATUALIZAÇÃO DO ESTADO ====================
+function applyDamage(amount) {
+    gameState.health = Math.max(0, gameState.health - amount);
+    updateHealthUI();
+    if (gameState.health === 0) {
+        renderStep(7); // Tela de derrota
     }
 }
 
+function healPlayer(amount) {
+    gameState.health = Math.min(100, gameState.health + amount);
+    updateHealthUI();
+}
+
+function updateHealthUI() {
+    elements.healthBar.style.width = `${gameState.health}%`;
+    elements.healthVal.innerText = `${gameState.health} HP`;
+}
+
 function updateGold(amount) {
-    playerState.gold = Math.max(0, playerState.gold + amount);
-    dom.goldVal.innerText = `${playerState.gold} Moedas`;
+    gameState.gold = Math.max(0, gameState.gold + amount);
+    elements.goldVal.innerText = `${gameState.gold} Moedas`;
 }
 
 function addItem(item) {
-    if (!playerState.inventory.includes(item)) {
-        playerState.inventory.push(item);
+    if (!gameState.inventory.includes(item)) {
+        gameState.inventory.push(item);
         renderInventory();
     }
 }
 
 function removeItem(item) {
-    playerState.inventory = playerState.inventory.filter(i => i !== item);
+    gameState.inventory = gameState.inventory.filter(i => i !== item);
     renderInventory();
 }
 
-function addLog(text) {
-    const entry = document.createElement('div');
-    entry.classList.add('log-entry');
-    entry.innerText = `> ${text}`;
-    dom.logBox.appendChild(entry);
-    dom.logBox.scrollTop = dom.logBox.scrollHeight;
+function addLog(message) {
+    const logEntry = document.createElement('div');
+    logEntry.classList.add('log-entry');
+    logEntry.innerText = `> ${message}`;
+    elements.logBox.appendChild(logEntry);
+    elements.logBox.scrollTop = elements.logBox.scrollHeight;
 }
 
-// Renderização dinâmica do inventário usando forEach
+// ==================== RENDERIZAÇÃO DO DOM (FOREACH) ====================
+
+// Renderiza o inventário utilizando o método forEach
 function renderInventory() {
-    dom.inventoryList.innerHTML = '';
-    playerState.inventory.forEach(item => {
+    elements.inventoryList.innerHTML = '';
+    
+    gameState.inventory.forEach(item => {
         const li = document.createElement('li');
-        li.classList.add('item-tag');
-        li.dataset.item = item;
+        li.classList.add('item-chip');
         li.innerText = item;
-        dom.inventoryList.appendChild(li);
+        elements.inventoryList.appendChild(li);
     });
 }
 
-// Renderização da cena principal
+// Renderiza o passo atual da história e gera os botões dinamicamente
 function renderStep(stepId) {
-    if (stepId === 1) resetGameData();
+    const node = storyTree[stepId];
+    gameState.currentStep = stepId;
 
-    const node = storyNodes[stepId];
-    playerState.currentStep = stepId;
+    // Uso de atributos data-* para manipular estados do DOM
+    elements.storyCard.dataset.step = stepId;
+    elements.locationTag.dataset.location = node.location.toLowerCase().replace(/\s+/g, '-');
+    elements.statusBadge.dataset.state = node.status;
+    
+    // Atualização de textos
+    elements.locationTag.innerText = node.location;
+    elements.statusBadge.innerText = node.status.toUpperCase();
+    elements.storyText.innerText = node.text;
 
-    // Atualização de atributos 'data'
-    dom.storyCard.dataset.location = node.location.toLowerCase().replace(/\s+/g, '-');
-    dom.statusBadge.dataset.state = node.status;
-    dom.statusBadge.innerText = node.status.toUpperCase();
+    // Limpa opções anteriores
+    elements.choicesContainer.innerHTML = '';
 
-    // Manipulação do DOM
-    dom.locationTag.innerText = node.location;
-    dom.storyText.innerText = node.text;
-    dom.choicesContainer.innerHTML = '';
-
-    // Uso de forEach para gerar opções interativas
+    // Uso do forEach para iterar pelas escolhas e criar os botões com addEventListener
     node.choices.forEach(choice => {
         const button = document.createElement('button');
         button.classList.add('btn-choice');
         button.innerText = choice.text;
 
-        // Validação de requisitos (Itens e Ouro)
-        let canChoose = true;
-        if (choice.requiredItem && !playerState.inventory.includes(choice.requiredItem)) {
-            canChoose = false;
+        // Validação de requisitos (Itens ou Ouro)
+        let requirementMet = true;
+        if (choice.requiredItem && !gameState.inventory.includes(choice.requiredItem)) {
+            requirementMet = false;
             button.innerText += ` [Requer: ${choice.requiredItem}]`;
         }
-        if (choice.requiredGold && playerState.gold < choice.requiredGold) {
-            canChoose = false;
+        if (choice.requiredGold && gameState.gold < choice.requiredGold) {
+            requirementMet = false;
             button.innerText += ` [Requer: ${choice.requiredGold} Ouro]`;
         }
 
-        button.disabled = !canChoose;
+        button.disabled = !requirementMet;
 
-        // Manipulação do addEventListener com execução de efeitos e transição
+        // Escutador de evento de clique para avançar na história
         button.addEventListener('click', () => {
             if (choice.effect) choice.effect();
-            if (choice.actionLog) addLog(choice.actionLog);
+            if (choice.log) addLog(choice.log);
             renderStep(choice.nextStep);
         });
 
-        dom.choicesContainer.appendChild(button);
+        elements.choicesContainer.appendChild(button);
     });
 }
 
-function resetGameData() {
-    playerState.health = 100;
-    playerState.gold = 25;
-    playerState.inventory = ["Tocha", "Poção de Cura"];
-    dom.logBox.innerHTML = '';
-    updateHealth(0);
+// Reinicia todos os dados
+function initGame() {
+    gameState.health = 100;
+    gameState.gold = 25;
+    gameState.inventory = ["Tocha", "Poção de Cura"];
+    elements.logBox.innerHTML = '';
+    
+    updateHealthUI();
     updateGold(0);
     renderInventory();
+    addLog("Você iniciou a sua jornada.");
+    renderStep(1);
 }
-
-// Event Listeners globais
-dom.restartBtn.addEventListener('click', () => {
-    addLog("O jogo foi reiniciado.");
-    renderStep(1);
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    renderStep(1);
-});
