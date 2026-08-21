@@ -1,1 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aventura Interativa: A Caverna dos Mistérios</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="game-container" id="game">
+        <header class="game-header">
+            <h1>A Caverna dos Mistérios</h1>
+            <div id="status" class="status-bar" data-status="ativo">Exploração</div>
+        </header>
 
+        <section id="story-card" class="card" data-step="1">
+            <p id="story-text">Carregando história...</p>
+        </section>
+
+        <nav id="choices-container" class="choices-grid">
+            <!-- Botões de escolha injetados via JavaScript -->
+        </nav>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
